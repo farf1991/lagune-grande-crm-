@@ -70,7 +70,7 @@ export default function LeadsPage() {
   const commerciaux = profiles.filter(p => p.role === 'commercial')
 
   const filtered = leads.filter(l => {
-    if (search) { const q = search.toLowerCase(); if (!l.nom.toLowerCase().includes(q) && !l.tel.includes(q) && !(l.email||'').toLowerCase().includes(q)) return false }
+    if (search) { const q = search.toLowerCase(); if (!l.nom.toLowerCase().includes(q) && !l.tel.includes(q)) return false }
     if (filterStatut && l.statut !== filterStatut) return false
     if (filterSource && l.source !== filterSource) return false
     if (filterAssigne && l.assigne_id !== filterAssigne) return false
@@ -141,7 +141,7 @@ export default function LeadsPage() {
     const XLSX = (await import('xlsx')).default
     const data = filtered.map(l => {
       const com = profiles.find(p => p.id === l.assigne_id)
-      return { Nom: l.nom, Téléphone: l.tel, Email: l.email||'', Source: l.source, Budget: l.budget||'', Statut: l.statut, 'Motif perte': l.motif_perdu||'', Commercial: com?.nom||'', 'Créé le': new Date(l.created_at).toLocaleDateString('fr-FR'), Relance: l.relance_date?fmtDate(l.relance_date):'' }
+      return { Nom: l.nom, Téléphone: l.tel, Ville: l.ville||'', Besoin: l.besoin||'', Horaire: l.horaire||'', Source: l.source, Statut: l.statut, 'Motif perte': l.motif_perdu||'', Commercial: com?.nom||'', 'Créé le': new Date(l.created_at).toLocaleDateString('fr-FR'), Relance: l.relance_date?fmtDate(l.relance_date):'' }
     })
     const ws = XLSX.utils.json_to_sheet(data)
     const wb = XLSX.utils.book_new()
@@ -321,7 +321,7 @@ export default function LeadsPage() {
                   <tr key={l.id} onClick={() => setSelectedLead(l)} style={{ borderBottom: '1px solid rgba(26,58,74,0.07)', cursor: 'pointer', background: isUrgent ? 'rgba(224,90,58,0.03)' : 'white', transition: 'background 0.1s' }}>
                     <td style={{ padding: '12px 14px' }}>
                       <div style={{ fontWeight: 600, color: '#1a3a4a', fontSize: '14px' }}>{l.nom}</div>
-                      <div style={{ fontSize: '11px', color: '#9a9a9a', marginTop: '2px' }}>{l.email||'—'}</div>
+                      <div style={{ fontSize: '11px', color: '#9a9a9a', marginTop: '2px' }}>{l.ville||'—'}</div>
                     </td>
                     <td style={{ padding: '12px 14px', fontSize: '13px', fontWeight: 500, color: '#5a5a5a' }}>{l.tel}</td>
                     <td style={{ padding: '12px 14px', fontSize: '13px', color: '#5a5a5a' }}>{l.ville||'—'}</td>
@@ -553,9 +553,9 @@ function AddLeadModal({ profiles, onClose, onSave }: { profiles: Profile[], onCl
   const supabase = createClientComponentClient()
   const [nom, setNom] = useState('')
   const [tel, setTel] = useState('')
-  const [email, setEmail] = useState('')
-  const [source, setSource] = useState<any>('Facebook')
-  const [budget, setBudget] = useState('')
+  const [ville, setVille] = useState('')
+  const [besoin, setBesoin] = useState('')
+  const [horaire, setHoraire] = useState('')
   const [assigneId, setAssigneId] = useState(profiles.find(p=>p.role==='commercial')?.id||'')
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
@@ -564,7 +564,7 @@ function AddLeadModal({ profiles, onClose, onSave }: { profiles: Profile[], onCl
     if (!nom || !tel) return
     setSaving(true)
     const { data: { session } } = await supabase.auth.getSession()
-    const { data: lead } = await supabase.from('leads').insert({ nom, tel, email, source, budget, assigne_id: assigneId, notes, projet: 'Lagune Grande Sidi Rahal' }).select().single()
+    const { data: lead } = await supabase.from('leads').insert({ nom, tel, ville, besoin, horaire, source: 'Meta', assigne_id: assigneId, notes, projet: 'Lagune Grande Sidi Rahal' }).select().single()
     if (lead) await supabase.from('lead_logs').insert({ lead_id: lead.id, auteur_id: session?.user.id, action: 'Lead créé manuellement', note: '' })
     setSaving(false)
     onSave()
@@ -585,11 +585,11 @@ function AddLeadModal({ profiles, onClose, onSave }: { profiles: Profile[], onCl
             <div><label style={fieldLabel}>Téléphone *</label><input value={tel} onChange={e=>setTel(e.target.value)} style={inputStyle} placeholder="+212 6XX XXX XXX" /></div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <div><label style={fieldLabel}>Email</label><input value={email} onChange={e=>setEmail(e.target.value)} style={inputStyle} placeholder="email@exemple.com" /></div>
-            <div><label style={fieldLabel}>Source</label><select value={source} onChange={e=>setSource(e.target.value)} style={{...inputStyle,cursor:'pointer'}}>{SOURCES.map(s=><option key={s}>{s}</option>)}</select></div>
+            <div><label style={fieldLabel}>Ville *</label><input value={ville} onChange={e=>setVille(e.target.value)} style={inputStyle} placeholder="Casablanca" /></div>
+            <div><label style={fieldLabel}>Besoin *</label><input value={besoin} onChange={e=>setBesoin(e.target.value)} style={inputStyle} placeholder="T3, T4..." /></div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <div><label style={fieldLabel}>Budget</label><input value={budget} onChange={e=>setBudget(e.target.value)} style={inputStyle} placeholder="1 200 000 DH" /></div>
+            <div><label style={fieldLabel}>Horaire</label><input value={horaire} onChange={e=>setHoraire(e.target.value)} style={inputStyle} placeholder="Matin, Soir..." /></div>
             <div><label style={fieldLabel}>Commercial</label><select value={assigneId} onChange={e=>setAssigneId(e.target.value)} style={{...inputStyle,cursor:'pointer'}}>{commerciaux.map(c=><option key={c.id} value={c.id}>{c.nom}</option>)}</select></div>
           </div>
           <div><label style={fieldLabel}>Notes</label><textarea value={notes} onChange={e=>setNotes(e.target.value)} style={{...inputStyle,minHeight:'70px',resize:'vertical'}} placeholder="Informations complémentaires..." /></div>
