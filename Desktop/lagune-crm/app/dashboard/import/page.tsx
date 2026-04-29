@@ -364,9 +364,8 @@ export default function ImportPage() {
                         <td style={{ padding: '9px 14px', fontWeight: 600, color: '#1a3a4a' }}>{l.nom}</td>
                         <td style={{ padding: '9px 14px', color: '#5a5a5a' }}>{l.tel}</td>
                         <td style={{ padding: '9px 14px' }}>
-                          <span style={{ fontSize: '11px', fontWeight: 600, color: '#2a7a8a', background: 'rgba(42,122,138,0.1)', padding: '2px 8px', borderRadius: '8px' }}>{l.source || 'Autre'}</span>
+                          <span style={{ fontSize: '11px', fontWeight: 600, color: '#2a7a8a', background: 'rgba(42,122,138,0.1)', padding: '2px 8px', borderRadius: '8px' }}>Meta</span>
                         </td>
-                        <td style={{ padding: '9px 14px', color: '#1a3a4a', fontWeight: 500 }}>{l.budget || '—'}</td>
                         <td style={{ padding: '9px 14px' }}>
                           <select value={l.assigneId} onChange={e => updateAssigne(i, e.target.value)} style={inp}>
                             <option value="">— non assigné —</option>
