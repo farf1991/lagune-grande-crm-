@@ -9,7 +9,7 @@ type MissingFieldRow = { nom: string; tel: string; ligne: number; champs: string
 type InvalidTelRow = { nom: string; tel: string; ligne: number }
 
 function normalizeTel(raw: string): string | null {
-  let t = raw.replace(/[\s\-\.]/g, '')
+  let t = raw.replace(/[^\d+]/g, '')
   // Retirer le + s'il existe pour normaliser
   if (t.startsWith('+')) t = t.slice(1)
   // Corriger les 0 parasites après indicatif connu : 330... → 33..., 2120... → 212...
