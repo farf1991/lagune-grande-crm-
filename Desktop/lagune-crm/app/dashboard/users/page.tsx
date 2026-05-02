@@ -86,7 +86,7 @@ export default function UsersPage() {
             <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div><label style={lbl}>Nom complet</label><input value={nom} onChange={e=>setNom(e.target.value)} style={inp} placeholder="Prénom Nom" /></div>
               <div><label style={lbl}>Email</label><input type="email" value={email} onChange={e=>setEmail(e.target.value)} style={inp} placeholder="email@laguneprande.ma" /></div>
-              <div><label style={lbl}>Mot de passe</label><input type="text" value={pwd} onChange={e=>setPwd(e.target.value)} style={inp} placeholder="Minimum 6 caractères" /></div>
+              <div><label style={lbl}>Mot de passe</label><input type="password" value={pwd} onChange={e=>setPwd(e.target.value)} style={inp} placeholder="Minimum 6 caractères" /></div>
               <div><label style={lbl}>Rôle</label>
                 <select value={role} onChange={e=>setRole(e.target.value as any)} style={{...inp,cursor:'pointer'}}>
                   <option value="commercial">Commercial</option>

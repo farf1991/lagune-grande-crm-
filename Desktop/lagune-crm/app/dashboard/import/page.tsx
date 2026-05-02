@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { SOURCES } from '@/lib/types'
 
 type LeadRow = { nom: string; tel: string; ville: string; besoin: string; horaire: string; assigneId: string }
 type DupRow = { nom: string; tel: string; existingNom: string; existingStatut: string }
@@ -36,6 +37,10 @@ export default function ImportPage() {
   const [fieldError, setFieldError] = useState(false)
   const [invalidTels, setInvalidTels] = useState<InvalidTelRow[]>([])
   const [telError, setTelError] = useState(false)
+  const [importSource, setImportSource] = useState<string>('Facebook')
+  const [importError, setImportError] = useState('')
+  const [toast, setToast] = useState('')
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 4000) }
 
   const loadProfiles = async () => {
     const { data } = await supabase.from('profiles').select('*').eq('role', 'commercial').eq('actif', true)
@@ -153,7 +158,7 @@ export default function ImportPage() {
     let imported = 0
 
     const batch = newLeads.map(l => ({
-      nom: l.nom, tel: l.tel, ville: l.ville, source: 'Meta',
+      nom: l.nom, tel: l.tel, ville: l.ville, source: importSource,
       besoin: l.besoin, horaire: l.horaire, assigne_id: l.assigneId,
       statut: 'Nouveau', projet: 'Lagune Grande Sidi Rahal',
     }))
@@ -171,7 +176,7 @@ export default function ImportPage() {
     }
 
     if (insertError) {
-      alert('Erreur import : ' + insertError)
+      setImportError('Erreur lors de l\'import : ' + insertError)
       setStatus('preview')
       return
     }
@@ -337,23 +342,37 @@ export default function ImportPage() {
           )}
 
           {/* Distribution */}
+          {importError && (
+            <div style={{ background: 'rgba(224,90,58,0.08)', border: '1.5px solid rgba(224,90,58,0.4)', borderRadius: '10px', padding: '14px 18px', fontSize: '13px', color: '#e05a3a', fontWeight: 500 }}>
+              ❌ {importError}
+            </div>
+          )}
+
           {newLeads.length > 0 && (
             <div style={{ background: 'white', borderRadius: '12px', border: '1px solid rgba(26,58,74,0.1)', overflow: 'hidden' }}>
               <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(26,58,74,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
                 <div style={{ fontSize: '13px', fontWeight: 700, color: '#1a3a4a' }}>Distribution des {newLeads.length} leads</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '12px', color: '#9a9a9a' }}>Tout assigner à :</span>
-                  <select value={bulkAssigne} onChange={e => applyBulkAssigne(e.target.value)} style={inp}>
-                    <option value="">— choisir —</option>
-                    {profiles.map(p => <option key={p.id} value={p.id}>{p.nom}</option>)}
-                  </select>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '12px', color: '#9a9a9a' }}>Source :</span>
+                    <select value={importSource} onChange={e => setImportSource(e.target.value)} style={inp}>
+                      {SOURCES.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '12px', color: '#9a9a9a' }}>Tout assigner à :</span>
+                    <select value={bulkAssigne} onChange={e => applyBulkAssigne(e.target.value)} style={inp}>
+                      <option value="">— choisir —</option>
+                      {profiles.map(p => <option key={p.id} value={p.id}>{p.nom}</option>)}
+                    </select>
+                  </div>
                 </div>
               </div>
               <div style={{ maxHeight: '380px', overflowY: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                   <thead>
                     <tr style={{ background: '#f5f0e8', position: 'sticky', top: 0 }}>
-                      {['Nom', 'Téléphone', 'Source', 'Budget', 'Assigner à'].map(h => (
+                      {['Nom', 'Téléphone', 'Besoin', 'Assigner à'].map(h => (
                         <th key={h} style={{ padding: '9px 14px', textAlign: 'left', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.8px', color: '#9a9a9a', fontWeight: 600 }}>{h}</th>
                       ))}
                     </tr>
@@ -363,9 +382,7 @@ export default function ImportPage() {
                       <tr key={i} style={{ borderBottom: '1px solid rgba(26,58,74,0.06)' }}>
                         <td style={{ padding: '9px 14px', fontWeight: 600, color: '#1a3a4a' }}>{l.nom}</td>
                         <td style={{ padding: '9px 14px', color: '#5a5a5a' }}>{l.tel}</td>
-                        <td style={{ padding: '9px 14px' }}>
-                          <span style={{ fontSize: '11px', fontWeight: 600, color: '#2a7a8a', background: 'rgba(42,122,138,0.1)', padding: '2px 8px', borderRadius: '8px' }}>Meta</span>
-                        </td>
+                        <td style={{ padding: '9px 14px', color: '#5a5a5a', fontSize: '12px' }}>{l.besoin || '—'}</td>
                         <td style={{ padding: '9px 14px' }}>
                           <select value={l.assigneId} onChange={e => updateAssigne(i, e.target.value)} style={inp}>
                             <option value="">— non assigné —</option>
@@ -423,6 +440,8 @@ export default function ImportPage() {
           </div>
         </div>
       )}
+
+      {toast && <div style={{ position: 'fixed', bottom: '24px', right: '24px', background: '#1a3a4a', color: 'white', padding: '12px 20px', borderRadius: '10px', fontSize: '13px', fontWeight: 500, boxShadow: '0 8px 30px rgba(0,0,0,0.2)', zIndex: 999 }}>{toast}</div>}
     </div>
   )
 }
