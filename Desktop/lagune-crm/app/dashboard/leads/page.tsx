@@ -45,6 +45,7 @@ export default function LeadsPage() {
   const [logNote, setLogNote] = useState('')
   const [toast, setToast] = useState('')
   const [relanceInput, setRelanceInput] = useState('')
+  const [commentaireInterne, setCommentaireInterne] = useState('')
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
@@ -65,6 +66,11 @@ export default function LeadsPage() {
   }, [])
 
   useEffect(() => { loadData() }, [loadData])
+
+  useEffect(() => {
+    setCommentaireInterne(selectedLead?.commentaire_interne || '')
+    setRelanceInput(selectedLead?.relance_date?.slice(0, 16) || '')
+  }, [selectedLead?.id])
 
   const isManager = me?.role === 'admin' || me?.role === 'manager'
   const commerciaux = profiles.filter(p => p.role === 'commercial')
@@ -462,7 +468,7 @@ export default function LeadsPage() {
                     🔔 Relance programmée {!selectedLead.relance_date && <span style={{ color: '#d4852a', fontSize: '10px', fontWeight: 400, marginLeft: '4px' }}>(auto 48h si non renseigné)</span>}
                   </div>
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <input type="datetime-local" defaultValue={selectedLead.relance_date?.slice(0,16)||''} onChange={e => setRelanceInput(e.target.value)} style={{ flex: 1, padding: '8px 12px', border: '1.5px solid rgba(26,58,74,0.15)', borderRadius: '8px', fontFamily: 'Outfit,sans-serif', fontSize: '13px', background: 'white' }} />
+                    <input type="datetime-local" value={relanceInput} onChange={e => setRelanceInput(e.target.value)} style={{ flex: 1, padding: '8px 12px', border: '1.5px solid rgba(26,58,74,0.15)', borderRadius: '8px', fontFamily: 'Outfit,sans-serif', fontSize: '13px', background: 'white' }} />
                     <button onClick={() => saveRelance(selectedLead.id, relanceInput)} style={{ ...btnPrimary, padding: '8px 14px', fontSize: '12px', whiteSpace: 'nowrap' }}>Enregistrer</button>
                   </div>
                 </div>
@@ -471,8 +477,8 @@ export default function LeadsPage() {
               {isManager && (
                 <div style={{ background: '#fff8e8', border: '1px solid #c9a84c', borderRadius: '9px', padding: '14px', marginBottom: '16px' }}>
                   <label style={{ ...fieldLabel, color: '#c9a84c' }}>⭐ Commentaire interne</label>
-                  <textarea defaultValue={selectedLead.commentaire_interne||''} id={`cmt-${selectedLead.id}`} placeholder="Note visible manager/admin uniquement..." style={{ width: '100%', padding: '9px 12px', border: '1.5px solid rgba(201,168,76,0.3)', borderRadius: '8px', fontFamily: 'Outfit,sans-serif', fontSize: '13px', minHeight: '60px', background: 'white' }} />
-                  <button onClick={() => saveCommentInterne(selectedLead.id, (document.getElementById(`cmt-${selectedLead.id}`) as HTMLTextAreaElement).value)} style={{ ...btnBase, background: '#c9a84c', color: 'white', padding: '6px 12px', fontSize: '12px', marginTop: '8px' }}>Enregistrer</button>
+                  <textarea value={commentaireInterne} onChange={e => setCommentaireInterne(e.target.value)} placeholder="Note visible manager/admin uniquement..." style={{ width: '100%', padding: '9px 12px', border: '1.5px solid rgba(201,168,76,0.3)', borderRadius: '8px', fontFamily: 'Outfit,sans-serif', fontSize: '13px', minHeight: '60px', background: 'white' }} />
+                  <button onClick={() => saveCommentInterne(selectedLead.id, commentaireInterne)} style={{ ...btnBase, background: '#c9a84c', color: 'white', padding: '6px 12px', fontSize: '12px', marginTop: '8px' }}>Enregistrer</button>
                 </div>
               )}
 
