@@ -138,6 +138,14 @@ export default function LeadsPage() {
     if (data) setSelectedLead(data)
   }
 
+  const clearRelance = async (leadId: number) => {
+    await supabase.from('leads').update({ relance_date: null }).eq('id', leadId)
+    await supabase.from('lead_logs').insert({ lead_id: leadId, auteur_id: me?.id, action: 'Relance supprimée — retour obtenu', note: '' })
+    showToast('✅ Lead retiré des relances')
+    loadData()
+    setSelectedLead(prev => prev ? { ...prev, relance_date: undefined } : null)
+  }
+
   const saveCommentInterne = async (leadId: number, val: string) => {
     await supabase.from('leads').update({ commentaire_interne: val }).eq('id', leadId)
     showToast('⭐ Commentaire sauvegardé')
@@ -471,6 +479,11 @@ export default function LeadsPage() {
                     <input type="datetime-local" value={relanceInput} onChange={e => setRelanceInput(e.target.value)} style={{ flex: 1, padding: '8px 12px', border: '1.5px solid rgba(26,58,74,0.15)', borderRadius: '8px', fontFamily: 'Outfit,sans-serif', fontSize: '13px', background: 'white' }} />
                     <button onClick={() => saveRelance(selectedLead.id, relanceInput)} style={{ ...btnPrimary, padding: '8px 14px', fontSize: '12px', whiteSpace: 'nowrap' }}>Enregistrer</button>
                   </div>
+                  {selectedLead.relance_date && (
+                    <button onClick={() => clearRelance(selectedLead.id)} style={{ ...btnBase, marginTop: '8px', padding: '7px 14px', fontSize: '12px', background: 'rgba(224,90,58,0.07)', color: '#c04a2a', border: '1px solid rgba(224,90,58,0.25)', whiteSpace: 'nowrap' }}>
+                      🚫 Ne pas relancer
+                    </button>
+                  )}
                 </div>
               </div>
 
